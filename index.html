@@ -1,621 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>NeoExtract | Smart Phone Number Extractor</title>
-  <!-- Tesseract.js for OCR -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4"></script>
-  <!-- Google Fonts for clean typography -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 (free icons) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      background: #e0e5ec;
-      font-family: 'Inter', sans-serif;
-      padding: 2rem 1.5rem;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+  :root {
+    --bg: #e0e5ec;
+    --shadow-light: #ffffff;
+    --shadow-dark: #a3b1c6;
+    --accent: #5b8dee;
+    --accent-glow: rgba(91,141,238,0.35);
+    --text-main: #3a3f5c;
+    --text-muted: #7b88a0;
+    --success: #48c78e;
+    --danger: #f14668;
+    --card-bg: #e0e5ec;
+  }
 
-    /* main neomorph card container */
-    .neo-card {
-      max-width: 880px;
-      width: 100%;
-      margin: 0 auto;
-      background: #e0e5ec;
-      border-radius: 56px;
-      padding: 2rem 2rem 2.5rem;
-      box-shadow: -12px -12px 24px rgba(255, 255, 255, 0.7),
-                  12px 12px 24px rgba(174, 192, 218, 0.5);
-      transition: all 0.2s ease;
-    }
+  body {
+    background: var(--bg);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
 
-    /* header section */
-    .neo-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
+  .card {
+    background: var(--card-bg);
+    border-radius: 28px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 8px 8px 20px var(--shadow-dark), -8px -8px 20px var(--shadow-light);
+  }
 
-    .neo-header h1 {
-      font-size: 1.9rem;
-      font-weight: 700;
-      color: #2c3e50;
-      letter-spacing: -0.3px;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      background: #e0e5ec;
-      padding: 0.6rem 1.8rem;
-      border-radius: 100px;
-      box-shadow: inset -2px -2px 5px rgba(255,255,255,0.6),
-                  inset 2px 2px 5px rgba(174,192,218,0.3),
-                  -5px -5px 12px rgba(255,255,255,0.8),
-                  5px 5px 12px rgba(174,192,218,0.4);
-    }
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
 
-    .neo-header h1 i {
-      font-size: 1.7rem;
-      color: #2c6e9e;
-      text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
-    }
+  .icon-wrap {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: var(--bg);
+    box-shadow: 6px 6px 14px var(--shadow-dark), -6px -6px 14px var(--shadow-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+  }
 
-    .sub {
-      text-align: center;
-      margin-top: 12px;
-      font-weight: 500;
-      color: #4a627a;
-      background: #e0e5ec;
-      display: inline-block;
-      width: auto;
-      margin-left: auto;
-      margin-right: auto;
-      padding: 6px 18px;
-      border-radius: 80px;
-      font-size: 0.85rem;
-      box-shadow: inset 1px 1px 2px rgba(255,255,255,0.7),
-                  inset -1px -1px 2px rgba(174,192,218,0.4);
-    }
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+  }
 
-    /* neumorphic file upload zone */
-    .upload-zone {
-      background: #e0e5ec;
-      border-radius: 48px;
-      padding: 1.6rem 1.2rem 1.8rem;
-      margin-bottom: 1.8rem;
-      box-shadow: inset -3px -3px 7px rgba(255,255,255,0.6),
-                  inset 3px 3px 7px rgba(174,192,218,0.35),
-                  5px 5px 12px rgba(174,192,218,0.3),
-                  -5px -5px 12px #ffffff;
-      transition: all 0.2s;
-    }
+  .subtitle {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-weight: 400;
+  }
 
-    .file-label {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      cursor: pointer;
-      padding: 1rem;
-      border-radius: 40px;
-      background: #e0e5ec;
-      transition: 0.2s;
-    }
+  /* Upload Zone */
+  .upload-zone {
+    border-radius: 20px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 24px;
+    background: var(--bg);
+    box-shadow: inset 5px 5px 12px var(--shadow-dark), inset -5px -5px 12px var(--shadow-light);
+    transition: all 0.25s ease;
+    position: relative;
+  }
 
-    .file-label i {
-      font-size: 3rem;
-      color: #2c6e9e;
-      filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.05));
-    }
+  .upload-zone.dragover {
+    box-shadow: inset 6px 6px 14px var(--shadow-dark), inset -6px -6px 14px var(--shadow-light), 0 0 0 2px var(--accent);
+  }
 
-    .file-label span {
-      font-weight: 500;
-      font-size: 1.1rem;
-      background: #e0e5ec;
-      padding: 8px 20px;
-      border-radius: 80px;
-      color: #2c3e50;
-      box-shadow: -3px -3px 6px #ffffff, 3px 3px 6px #b8c3d4;
-    }
+  .upload-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
 
-    input[type="file"] {
-      display: none;
-    }
+  .upload-icon { font-size: 36px; margin-bottom: 10px; }
 
-    .file-info {
-      margin-top: 18px;
-      text-align: center;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: #2c6e9e;
-      background: #e0e5ec;
-      padding: 8px 12px;
-      border-radius: 40px;
-      display: inline-block;
-      width: auto;
-      box-shadow: inset 0px 1px 3px rgba(0,0,0,0.05), 0px 2px 4px rgba(255,255,255,0.6);
-    }
+  .upload-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
 
-    /* neumorphic action button */
-    .neo-btn {
-      background: #e0e5ec;
-      border: none;
-      padding: 16px 32px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      font-family: 'Inter', sans-serif;
-      color: #2c3e50;
-      border-radius: 60px;
-      width: 100%;
-      cursor: pointer;
-      box-shadow: -6px -6px 14px rgba(255,255,255,0.7),
-                  6px 6px 14px rgba(174,192,218,0.5);
-      transition: all 0.15s linear;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 8px;
-      margin-bottom: 32px;
-    }
+  .upload-text span {
+    color: var(--accent);
+    font-weight: 700;
+  }
 
-    .neo-btn:active {
-      box-shadow: inset -3px -3px 8px rgba(255,255,255,0.8),
-                  inset 3px 3px 8px rgba(174,192,218,0.5);
-      transform: scale(0.98);
-    }
+  .file-count {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    min-height: 18px;
+  }
 
-    .neo-btn i {
-      font-size: 1.3rem;
-      color: #1f6392;
-    }
+  /* Button */
+  .btn-extract {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    background: var(--bg);
+    color: var(--accent);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 6px 6px 14px var(--shadow-dark), -6px -6px 14px var(--shadow-light);
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-bottom: 28px;
+  }
 
-    /* results header */
-    .result-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+  .btn-extract:hover:not(:disabled) {
+    box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+    color: #3a6fd8;
+  }
 
-    .result-header h3 {
-      font-weight: 600;
-      font-size: 1.4rem;
-      color: #1f3b4c;
-      letter-spacing: -0.2px;
-      background: #e0e5ec;
-      padding: 5px 16px;
-      border-radius: 40px;
-      box-shadow: inset -1px -1px 3px #ffffff, inset 1px 1px 3px #b8c3d4;
-    }
+  .btn-extract:active:not(:disabled) {
+    box-shadow: inset 4px 4px 10px var(--shadow-dark), inset -4px -4px 10px var(--shadow-light);
+  }
 
-    .copy-btn {
-      background: #e0e5ec;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 40px;
-      font-weight: 500;
-      font-family: 'Inter', sans-serif;
-      color: #2c6e9e;
-      cursor: pointer;
-      box-shadow: -3px -3px 6px #ffffff, 3px 3px 6px #b8c3d4;
-      transition: 0.1s;
-      font-size: 0.8rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
+  .btn-extract:disabled {
+    opacity: 0.5; cursor: not-allowed;
+  }
 
-    .copy-btn:active {
-      box-shadow: inset -2px -2px 4px #ffffff, inset 2px 2px 4px #b8c3d4;
-    }
+  /* Progress */
+  .progress-wrap {
+    margin-bottom: 20px;
+    display: none;
+  }
 
-    /* output area - neumorphic inner card */
-    .neo-output {
-      background: #e0e5ec;
-      border-radius: 40px;
-      padding: 1.6rem;
-      min-height: 220px;
-      max-height: 380px;
-      overflow-y: auto;
-      box-shadow: inset -5px -5px 12px rgba(255,255,255,0.7),
-                  inset 5px 5px 12px rgba(174,192,218,0.4),
-                  2px 2px 5px rgba(0,0,0,0.02);
-      transition: all 0.2s;
-    }
+  .progress-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex; justify-content: space-between;
+  }
 
-    pre {
-      font-family: 'Inter', monospace;
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: #1e2f3a;
-      background: transparent;
-      white-space: pre-wrap;
-      word-break: break-word;
-      margin: 0;
-      line-height: 1.55;
-    }
+  .progress-track {
+    height: 10px;
+    border-radius: 10px;
+    background: var(--bg);
+    box-shadow: inset 3px 3px 7px var(--shadow-dark), inset -3px -3px 7px var(--shadow-light);
+    overflow: hidden;
+  }
 
-    /* custom scrollbar */
-    .neo-output::-webkit-scrollbar {
-      width: 6px;
-    }
-    .neo-output::-webkit-scrollbar-track {
-      background: #d1d9e6;
-      border-radius: 10px;
-      box-shadow: inset 1px 1px 2px #b0bed0;
-    }
-    .neo-output::-webkit-scrollbar-thumb {
-      background: #8da0b5;
-      border-radius: 10px;
-    }
+  .progress-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), #7eb3ff);
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
 
-    /* spinner & status */
-    .status-area {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      margin-top: 16px;
-      margin-bottom: 12px;
-      font-weight: 500;
-      color: #2c6e9e;
-      background: #e0e5ec;
-      padding: 8px 18px;
-      border-radius: 60px;
-      width: fit-content;
-      box-shadow: inset 0px 0px 0px, -2px -2px 4px #fff, 2px 2px 5px #b8c3d4;
-    }
+  /* Output */
+  .output-section { display: none; }
 
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 3px solid #cbd5e1;
-      border-top: 3px solid #2c6e9e;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+  .output-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex; align-items: center; gap: 6px;
+  }
 
-    .hidden {
-      display: none;
-    }
+  .badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
 
-    /* file count badge */
-    .badge-files {
-      background: #e0e5ec;
-      border-radius: 60px;
-      padding: 4px 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-left: 8px;
-      box-shadow: inset 0px 1px 2px rgba(0,0,0,0.02), 1px 1px 2px white;
-    }
+  .btn-copy {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 5px;
+  }
 
-    @media (max-width: 520px) {
-      body {
-        padding: 1rem;
-      }
-      .neo-card {
-        padding: 1.3rem;
-      }
-      .neo-header h1 {
-        font-size: 1.4rem;
-        padding: 0.4rem 1rem;
-      }
-    }
+  .btn-copy:hover { color: var(--accent); }
+  .btn-copy:active { box-shadow: inset 3px 3px 8px var(--shadow-dark), inset -3px -3px 8px var(--shadow-light); }
+  .btn-copy.copied { color: var(--success); }
 
-    .footer-tip {
-      margin-top: 1rem;
-      text-align: center;
-      font-size: 0.7rem;
-      opacity: 0.7;
-      font-weight: 400;
-    }
-  </style>
+  .output-box {
+    border-radius: 16px;
+    padding: 20px;
+    background: var(--bg);
+    box-shadow: inset 5px 5px 12px var(--shadow-dark), inset -5px -5px 12px var(--shadow-light);
+    font-family: 'Courier New', monospace;
+    font-size: 0.88rem;
+    color: var(--text-main);
+    line-height: 1.9;
+    max-height: 240px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .output-box::-webkit-scrollbar { width: 5px; }
+  .output-box::-webkit-scrollbar-track { background: transparent; }
+  .output-box::-webkit-scrollbar-thumb { background: var(--shadow-dark); border-radius: 10px; }
+
+  .no-results {
+    color: var(--danger);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 8px 0;
+    font-weight: 600;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px; left: 50%; transform: translateX(-50%) translateY(60px);
+    background: var(--text-main);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 40px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+    z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
 </head>
 <body>
 
-<div class="neo-card">
-  <div class="neo-header">
-    <h1>
-      <i class="fas fa-mobile-alt"></i> 
-      NeoExtract
-    </h1>
-    <div class="sub">
-      <i class="fas fa-robot"></i> OCR + Smart 10-digit extraction
-    </div>
+<div class="card">
+  <div class="header">
+    <div class="icon-wrap">📱</div>
+    <h1>Phone Extractor</h1>
+    <p class="subtitle">Upload screenshots · Extract Indian numbers instantly</p>
   </div>
 
-  <!-- Soft UI upload zone -->
-  <div class="upload-zone">
-    <label for="imageInput" class="file-label">
-      <i class="fas fa-cloud-upload-alt"></i>
-      <span><i class="fas fa-images"></i>  Choose screenshots</span>
-    </label>
-    <input type="file" id="imageInput" accept="image/*" multiple>
-    <div id="fileCountDisplay" class="file-info">
-      <i class="fas fa-info-circle"></i> No files selected
-    </div>
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="imageInput" accept="image/*" multiple onchange="updateFileCount()">
+    <div class="upload-icon">🖼️</div>
+    <div class="upload-text"><span>Click to upload</span> or drag & drop</div>
+    <div class="upload-text" style="margin-top:4px; font-size:0.76rem;">PNG, JPG, WEBP supported</div>
+    <div class="file-count" id="fileCount"></div>
   </div>
 
-  <!-- Extract action button -->
-  <button class="neo-btn" id="extractBtn">
-    <i class="fas fa-magic"></i> Extract Numbers
+  <button class="btn-extract" id="extractBtn" onclick="processImages()">
+    <span>🔍</span> Extract Numbers
   </button>
 
-  <!-- processing indicator (neumorphic) -->
-  <div id="statusContainer" class="status-area hidden">
-    <div class="spinner"></div>
-    <span id="statusText">Processing screenshots...</span>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-label">
+      <span id="progressText">Processing…</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
   </div>
 
-  <!-- Results section -->
-  <div class="result-header">
-    <h3><i class="fas fa-list-ul"></i> Extracted Numbers</h3>
-    <button id="copyResultsBtn" class="copy-btn"><i class="far fa-copy"></i> Copy all</button>
-  </div>
-  <div class="neo-output">
-    <pre id="output">✨ Ready — upload one or more phone screenshots, then click Extract.</pre>
-  </div>
-  <div class="footer-tip">
-    <i class="fas fa-shield-alt"></i> Supports +91, 91 prefix or plain 10-digit Indian numbers
+  <div class="output-section" id="outputSection">
+    <div class="output-header">
+      <div class="output-label">
+        📋 Results <span class="badge" id="countBadge">0</span>
+      </div>
+      <button class="btn-copy" id="copyBtn" onclick="copyNumbers()">
+        <span>📄</span> Copy All
+      </button>
+    </div>
+    <div class="output-box" id="output"></div>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-  (function() {
-    // DOM elements
-    const fileInput = document.getElementById('imageInput');
-    const extractBtn = document.getElementById('extractBtn');
-    const outputPre = document.getElementById('output');
-    const fileCountDisplay = document.getElementById('fileCountDisplay');
-    const statusContainer = document.getElementById('statusContainer');
-    const statusText = document.getElementById('statusText');
-    const copyBtn = document.getElementById('copyResultsBtn');
+  let extractedNumbers = [];
 
-    // helper to update file selection display
-    function updateFileDisplay() {
-      const files = fileInput.files;
-      if (files.length === 0) {
-        fileCountDisplay.innerHTML = `<i class="fas fa-times-circle"></i> No files selected — tap to browse`;
-        fileCountDisplay.style.opacity = '0.8';
-      } else {
-        const names = Array.from(files).map(f => f.name.length > 25 ? f.name.slice(0, 22) + '...' : f.name).join(', ');
-        fileCountDisplay.innerHTML = `<i class="fas fa-check-circle"></i> ${files.length} file(s) selected: ${names}`;
-      }
-    }
+  // Drag & drop
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    document.getElementById('imageInput').files = e.dataTransfer.files;
+    updateFileCount();
+  });
 
-    fileInput.addEventListener('change', updateFileDisplay);
-    
-    // robust phone pattern for INDIAN numbers: captures +91, 91, optional spaces/hyphens, then exactly 10 digits grouped as 5+5
-    // Also captures plain 10-digit numbers (no prefix) 
-    // Pattern explanation: optional (+91|91|) with possible space/hyphen then capture 5 digits and 5 digits = total 10 digit number.
-    // But make it flexible to avoid missing numbers with spaces in between.
-    // We want numbers like "9876543210", "98765 43210", "98765-43210", "+91 9876543210", "919876543210"
-    const phonePattern = /(?:\+91|91)?[\s-]?(\d{5})[\s-]?(\d{5})/g;
-    
-    // additionally we also want strict 10 digit sequences without any prefix (if the image contains continuous 10 digits)
-    // but our regex already captures them as group1+group2 if they appear as 5+5 split. For safety, also a fallback full 10-digit detection?
-    // The primary rule for Indian numbers covers continuous 10-digit when there's no split? Actually continuous "9876543210" would not match (\d{5})\s?-?(\d{5}) because there is no separator?
-    // To be robust, we also apply a secondary extraction: any 10-digit sequence with optional +91/91 prefix 
-    // But our pattern may not catch consecutive 10 digits without any separator. e.g "9876543210" will not match because it expects two groups of 5 separated by optional hyphen/space.
-    // Let's enhance the extraction function: first try the standard grouping pattern, then also scan for raw 10 digit numbers.
-    // But careful not to double-count— using Set solves duplicates.
-    
-    // Core extraction: given OCR text, return set of cleaned 10-digit numbers
-    function extractPhoneNumbersFromText(text) {
-      let foundNumbers = new Set();
-      
-      // 1) Pattern for numbers with possible separators and prefix
+  function updateFileCount() {
+    const files = document.getElementById('imageInput').files;
+    const el = document.getElementById('fileCount');
+    if (files.length === 0) { el.textContent = ''; return; }
+    el.textContent = `${files.length} file${files.length > 1 ? 's' : ''} selected`;
+  }
+
+  async function processImages() {
+    const files = document.getElementById('imageInput').files;
+    if (!files.length) { showToast('⚠️ Please upload at least one image'); return; }
+
+    const btn = document.getElementById('extractBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Processing…';
+
+    document.getElementById('progressWrap').style.display = 'block';
+    document.getElementById('outputSection').style.display = 'none';
+    extractedNumbers = [];
+
+    const phonePattern = /(?:\+91[\s-]?|91[\s-]?)?([6-9]\d{4})[\s\-.]?(\d{5})/g;
+    let numbers = new Set();
+
+    for (let i = 0; i < files.length; i++) {
+      const pct = Math.round(((i) / files.length) * 100);
+      setProgress(pct, `Image ${i + 1} of ${files.length}`);
+      const { data: { text } } = await Tesseract.recognize(files[i], 'eng');
+      phonePattern.lastIndex = 0;
       let match;
-      const combinedRegex = /(?:\+91|91)?[\s-]?(\d{5})[\s-]?(\d{5})/g;
-      while ((match = combinedRegex.exec(text)) !== null) {
-        if (match[1] && match[2]) {
-          let fullNumber = match[1] + match[2];
-          if (fullNumber.length === 10 && /^\d{10}$/.test(fullNumber)) {
-            foundNumbers.add(fullNumber);
-          }
-        }
-      }
-      
-      // 2) Regex for any consecutive 10-digit numbers (even if no separator)
-      const rawTenDigit = /\b\d{10}\b/g;
-      let rawMatch;
-      while ((rawMatch = rawTenDigit.exec(text)) !== null) {
-        let num = rawMatch[0];
-        if (/^\d{10}$/.test(num)) {
-          foundNumbers.add(num);
-        }
-      }
-      
-      // 3) Also handle cases with +91 or 91 immediately followed by 10 digits without any space: e.g +919876543210 => gives 9876543210
-      const prefixTenDigit = /(?:\+91|91)(\d{10})/g;
-      let pMatch;
-      while ((pMatch = prefixTenDigit.exec(text)) !== null) {
-        if (pMatch[1] && pMatch[1].length === 10) {
-          foundNumbers.add(pMatch[1]);
-        }
-      }
-      
-      // 4) Additional edge: numbers like "98765 43210" or "98765-43210" already covered by step1.
-      // also numbers that might have spaces but not captured? step1 handles flexible spaces.
-      return foundNumbers;
-    }
-    
-    // Main processing function: async OCR for multiple images
-    async function processImages() {
-      const files = fileInput.files;
-      if (files.length === 0) {
-        // neumorphic alert style -> small inline alert but we keep simple
-        outputPre.innerText = "⚠️ Please upload at least one screenshot image first.\nSupported: PNG, JPG, etc.";
-        return;
-      }
-      
-      // show status & disable button during process
-      statusContainer.classList.remove('hidden');
-      extractBtn.disabled = true;
-      extractBtn.style.opacity = '0.7';
-      outputPre.innerText = "🔍 Processing images... OCR in progress (this may take a few seconds per image)";
-      
-      let allNumbers = new Set();
-      let processedCount = 0;
-      const totalFiles = files.length;
-      
-      try {
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          statusText.innerText = `📸 OCR: ${i+1}/${totalFiles} — ${file.name.substring(0, 30)}`;
-          
-          try {
-            const { data: { text } } = await Tesseract.recognize(file, 'eng', {
-              logger: m => {
-                // optional quiet logging, but we just keep minimal UI feedback
-                if (m.status === 'recognizing text') {
-                  statusText.innerText = `✍️ Reading ${file.name.substring(0, 20)}... ${Math.round(m.progress * 100)}%`;
-                }
-              }
-            });
-            
-            const extracted = extractPhoneNumbersFromText(text);
-            extracted.forEach(num => allNumbers.add(num));
-            processedCount++;
-          } catch (ocrErr) {
-            console.warn(`OCR failed for ${file.name}`, ocrErr);
-            // continue with other images
-          }
-        }
-        
-        // final result display
-        const sortedNumbers = Array.from(allNumbers).sort((a,b) => a.localeCompare(b));
-        if (sortedNumbers.length === 0) {
-          outputPre.innerText = "📭 No valid 10-digit phone numbers found.\n• Make sure screenshots are clear.\n• Try images with visible contact numbers.\n• Supported: Indian numbers with +91, 91 or plain 10 digits.";
-        } else {
-          outputPre.innerText = sortedNumbers.join("\n");
-        }
-        
-        // show nice summary message in console, but also small effect
-        if (sortedNumbers.length > 0) {
-          statusText.innerText = `✅ Done! Found ${sortedNumbers.length} unique number(s).`;
-          setTimeout(() => {
-            if (!statusContainer.classList.contains('hidden')) {
-              statusContainer.classList.add('hidden');
-            }
-          }, 1800);
-        } else {
-          statusText.innerText = `⚠️ Processed ${totalFiles} image(s), no numbers recognised.`;
-          setTimeout(() => {
-            statusContainer.classList.add('hidden');
-          }, 2400);
-        }
-        
-      } catch (err) {
-        console.error(err);
-        outputPre.innerText = "❌ Unexpected error during extraction. Please refresh and try again.\n" + err.message;
-        statusText.innerText = "Error occurred";
-      } finally {
-        extractBtn.disabled = false;
-        extractBtn.style.opacity = '1';
-        // keep status visible for few seconds then hide after delay (unless we hide later)
-        setTimeout(() => {
-          if (statusContainer && !statusContainer.classList.contains('hidden')) {
-            // if not already hidden from success case (but safe)
-            if (statusText.innerText.includes("Done") || statusText.innerText.includes("error") || statusText.innerText.includes("Processed")) {
-              // we will hide after extra 1s
-              setTimeout(() => {
-                if (statusContainer) statusContainer.classList.add('hidden');
-              }, 1000);
-            } else {
-              statusContainer.classList.add('hidden');
-            }
-          }
-        }, 3000);
+      while ((match = phonePattern.exec(text)) !== null) {
+        numbers.add(match[1] + match[2]);
       }
     }
-    
-    // Copy results to clipboard
-    async function copyResults() {
-      const rawText = outputPre.innerText;
-      if (!rawText || rawText.includes("Ready — upload") || rawText.includes("Processing images") || rawText.includes("No valid 10-digit") || rawText.includes("Please upload")) {
-        // show temporary neumorphic feedback
-        const tempMsg = "📋 No numbers to copy yet.";
-        const original = outputPre.innerText;
-        outputPre.innerText = tempMsg;
-        setTimeout(() => {
-          outputPre.innerText = original;
-        }, 1000);
-        return;
+
+    setProgress(100, 'Done!');
+    extractedNumbers = Array.from(numbers).sort();
+
+    setTimeout(() => {
+      document.getElementById('progressWrap').style.display = 'none';
+      const outSection = document.getElementById('outputSection');
+      const outBox = document.getElementById('output');
+      const badge = document.getElementById('countBadge');
+      outSection.style.display = 'block';
+      badge.textContent = extractedNumbers.length;
+
+      if (extractedNumbers.length === 0) {
+        outBox.innerHTML = '<div class="no-results">No phone numbers found.</div>';
+      } else {
+        outBox.textContent = extractedNumbers.join('\n');
       }
-      
-      // check if there are actual numbers
-      const lines = rawText.split('\n').filter(l => l.trim().length > 0 && /^\d{10}$/.test(l.trim()));
-      if (lines.length === 0 && !rawText.includes("Found") && !rawText.match(/\d{10}/)) {
-        const originalText = outputPre.innerText;
-        outputPre.innerText = "⚠️ No extractable numbers to copy.";
-        setTimeout(() => {
-          outputPre.innerText = originalText;
-        }, 1200);
-        return;
-      }
-      
-      try {
-        await navigator.clipboard.writeText(rawText);
-        // flash visual feedback on copy button
-        const originalBtnHtml = copyBtn.innerHTML;
-        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-        setTimeout(() => {
-          copyBtn.innerHTML = originalBtnHtml;
-        }, 1500);
-      } catch (err) {
-        alert("Unable to copy automatically. You can manually select the numbers.");
-      }
-    }
-    
-    // attach event handlers
-    extractBtn.addEventListener('click', processImages);
-    copyBtn.addEventListener('click', copyResults);
-    
-    // initial file display
-    updateFileDisplay();
-    
-    // also improve drag area? we keep functional label.
-    // optional: allow drag but not needed, but adds friendliness
-    const uploadZone = document.querySelector('.upload-zone');
-    if (uploadZone) {
-      uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.style.boxShadow = "inset -3px -3px 8px rgba(255,255,255,0.8), inset 3px 3px 8px rgba(174,192,218,0.6)";
-      });
-      uploadZone.addEventListener('dragleave', () => {
-        uploadZone.style.boxShadow = "inset -3px -3px 7px rgba(255,255,255,0.6), inset 3px 3px 7px rgba(174,192,218,0.35), 5px 5px 12px rgba(174,192,218,0.3), -5px -5px 12px #ffffff";
-      });
-      uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.style.boxShadow = "inset -3px -3px 7px rgba(255,255,255,0.6), inset 3px 3px 7px rgba(174,192,218,0.35), 5px 5px 12px rgba(174,192,218,0.3), -5px -5px 12px #ffffff";
-        const dt = e.dataTransfer;
-        if (dt.files && dt.files.length > 0) {
-          fileInput.files = dt.files;
-          updateFileDisplay();
-        }
-      });
-    }
-  })();
+      btn.disabled = false;
+      btn.innerHTML = '<span>🔍</span> Extract Numbers';
+      showToast(`✅ Found ${extractedNumbers.length} number${extractedNumbers.length !== 1 ? 's' : ''}`);
+    }, 400);
+  }
+
+  function setProgress(pct, label) {
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressText').textContent = label;
+  }
+
+  function copyNumbers() {
+    if (!extractedNumbers.length) { showToast('Nothing to copy!'); return; }
+    navigator.clipboard.writeText(extractedNumbers.join('\n')).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.classList.add('copied');
+      btn.innerHTML = '<span>✅</span> Copied!';
+      showToast('📋 All numbers copied!');
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<span>📄</span> Copy All';
+      }, 2000);
+    });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
 </script>
 </body>
 </html>
